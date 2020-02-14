@@ -1,3 +1,17 @@
+##########################
+## IMPORTANT NOTE
+##########################
+
+# This snakefile is built on intermediate
+# outputs from github.com/taylorreiter/ibd
+# The rules that generate these intermediate 
+# outputs are not included in this snakefile,
+# and include preprocessing and sourmash
+# signature generation. 
+# This Snakefile is a proof-of-concept for
+# correlating k-mers with quantitative/metabolite
+# measurements. 
+
 import pandas as pd
 import feather
 from sourmash import signature
@@ -10,9 +24,8 @@ SAMPLES = m['sample'].unique().tolist()
 
 rule all:
     input:
-        "outputs/comp/all_filt_comp.csv",
         "outputs/hash_tables/normalized_abund_hashes_wide.feather",
-        #"outputs/hash_tables/all_unnormalized_abund_hashes_wide.feather",
+        "outputs/vita_rf/pomona_install.txt",
         #"outputs/gather/vita_vars.csv",
 
 ########################################
@@ -257,33 +270,4 @@ rule gather_vita_vars:
     shell:'''
     sourmash gather -o {output.csv} --save-matches {output.matches} --output-unassigned {output.un} --scaled 2000 -k 31 {input.sig} {input.db1} {input.db4} {input.db3} {input.db2}
     '''
-
-###############################
-rule hash_table_long_unnormalized:
-    """
-    Unlike the hashtable that is input into the random forest analysis, this
-    hash table is not normalized by number of hashes in the filtered signature. 
-    Differential expression software that we will be using to calculate 
-    differential abundance expects unnormalized counts.
-    """
-    input: 
-        expand("outputs/filt_sigs_named_csv_hmp/{sample}_filt_named.csv", sample = SAMPLES)
-    output: csv = "outputs/hash_tables/hmp_unnormalized_abund_hashes_long.csv"
-    conda: 'r.yml'
-    script: "scripts/all_unnormalized_hash_abund_long.R"
-        
-rule hash_table_wide_unnormalized:
-    input: "outputs/hash_tables/hmp_unnormalized_abund_hashes_long.csv"
-    output: "outputs/hash_tables/hmp_unnormalized_abund_hashes_wide.feather"
-    run:
-        import pandas as pd
-        import feather
-
-        ibd = pd.read_csv(str(input), dtype = {"minhash" : "int64", "abund" : "float64", "sample" : "object"})
-        ibd_wide=ibd.pivot(index='sample', columns='minhash', values='abund')
-        ibd_wide = ibd_wide.fillna(0)
-        ibd_wide['sample'] = ibd_wide.index
-        ibd_wide = ibd_wide.reset_index(drop=True)
-        ibd_wide.columns = ibd_wide.columns.astype(str)
-        ibd_wide.to_feather(str(output)) 
 
