@@ -1,4 +1,5 @@
-setwd("~/github/ibd")
+setwd("~/github/2020-calprotectin/")
+set.seed(1)
 
 # make fecal calprotectin metadata
 
@@ -6,7 +7,7 @@ library(dplyr)
 library(readr)
 library(purrr)
 library(tidyr)
-
+library(ggplot2)
 
 files <- list.files("inputs/ENA", full.names = T)
 # filter to cohorts with calprotectin measurements
@@ -58,7 +59,7 @@ prj <- prj %>%
   mutate(fecal_calprotectin = as.numeric(fecal_calprotectin))
 
 ggplot(prj, aes(x = fecal_calprotectin, fill = study_accession)) +
-  geom_density() +
+  geom_density(alpha = .3) +
   theme_minimal()
 
 ggplot(prj, aes(x = fecal_calprotectin, fill = diagnosis)) +
@@ -138,4 +139,4 @@ for(i in 1:nrow(wrk)){
   }
 }
 
-write_tsv(x = wrk, path = "inputs/working_metadata.tsv")
+write_tsv(x = wrk, path = "inputs/working_metadata_fecal_calprotectin.tsv")
