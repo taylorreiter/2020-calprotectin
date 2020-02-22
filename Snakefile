@@ -20,13 +20,14 @@ import os
 from collections import Counter
 
 m = pd.read_csv("inputs/working_metadata_fecal_calprotectin.tsv", sep = "\t", header = 0)
-SAMPLES = m['sample'].unique().tolist()
+SAMPLES = m['library_name'].unique().tolist()
 
 rule all:
     input:
         "outputs/hash_tables/normalized_abund_hashes_wide.feather",
         "outputs/vita_rf/pomona_install.txt",
-        #"outputs/gather/vita_vars.csv",
+        "outputs/gather/vita_vars.csv",
+        "outputs/vita_rf/vita_vars.txt",
 
 ########################################
 ## PREPROCESSING
@@ -149,22 +150,19 @@ rule install_pomona:
 
 rule vita_var_sel_rf:
     input:
-        info = "inputs/working_metadata.tsv", 
+        info = "inputs/working_metadata_fecal_calprotectin.tsv", 
         feather = "outputs/hash_tables/normalized_abund_hashes_wide.feather",
         pomona = "outputs/vita_rf/pomona_install.txt"
     output:
-        vita_rf = "outputs/vita_rf/vita_rf.RDS",
+        vita_rf = "outputs/vita_rf/fc_vita.RDS",
         vita_vars = "outputs/vita_rf/vita_vars.txt",
-        ibd_novalidation = "outputs/vita_rf/ibd_novalidation_filt.csv",
-        ibd_novalidation_diagnosis = "outputs/vita_rf/bd_novalidation_filt_diagnosis.txt",
-        ibd_validation = "outputs/vita_rf/ibd_validation_filt.csv"
+        fc_filt = "outputs/vita_rf/fc_filt.csv",
     conda: 'rf.yml'
     script: "scripts/vita_rf.R"
 
 #rule tune_rf:
 #    input:
 #        ibd_novalidation = "outputs/vita_rf/ibd_novalidation_filt.csv",
-#        ibd_novalidation_diagnosis = "outputs/vita_rf/bd_novalidation_filt_diagnosis.txt" 
 #    output:
 #        optimal_rf = "outputs/optimal_rf/optimal_ranger.RDS",
 #        pred_test = "outputs/optimal_rf/pred_test_tab.txt",
@@ -200,57 +198,57 @@ rule convert_vita_vars_to_sig:
     '''
 
 rule download_gather_almeida:
-    output: "inputs/gather_databases/almeida-mags-k31.tar.gz"
+    output: "../2020-ibd/inputs/gather_databases/almeida-mags-k31.tar.gz"
     shell:'''
     wget -O {output} https://osf.io/5jyzr/download
     '''
 
 rule untar_almeida:
-    output: "inputs/gather_databases/almeida-mags-k31.sbt.json"
-    input: "inputs/gather_databases/almeida-mags-k31.tar.gz"
-    params: outdir="inputs/gather_databases"
+    output: "../2020-ibd/inputs/gather_databases/almeida-mags-k31.sbt.json"
+    input: "../2020-ibd/inputs/gather_databases/almeida-mags-k31.tar.gz"
+    params: outdir="../2020-ibd/inputs/gather_databases"
     shell:'''
     tar xf {input} -C {params.outdir}
     '''
 
 rule download_gather_pasolli:
-    output: "inputs/gather_databases/pasolli-mags-k31.tar.gz"
+    output: "../2020-ibd/inputs/gather_databases/pasolli-mags-k31.tar.gz"
     shell:'''
     wget -O {output} https://osf.io/3vebw/download
     '''
 
 rule untar_pasolli:
-    output: "inputs/gather_databases/pasolli-mags-k31.sbt.json"
-    input: "inputs/gather_databases/pasolli-mags-k31.tar.gz"
-    params: outdir="inputs/gather_databases"
+    output: "../2020-ibd/inputs/gather_databases/pasolli-mags-k31.sbt.json"
+    input: "../2020-ibd/inputs/gather_databases/pasolli-mags-k31.tar.gz"
+    params: outdir="../2020-ibd/inputs/gather_databases"
     shell:'''
     tar xf {input} -C {params.outdir}
     '''
 
 rule download_gather_nayfach:
-    output: "inputs/gather_databases/nayfach-k31.tar.gz"
+    output: "../2020-ibd/inputs/gather_databases/nayfach-k31.tar.gz"
     shell:'''
     wget -O {output} https://osf.io/y3vwb/download
     '''
 
 rule untar_nayfach:
-    output: "inputs/gather_databases/nayfach-k31.sbt.json"
-    input: "inputs/gather_databases/nayfach-k31.tar.gz"
-    params: outdir="inputs/gather_databases"
+    output: "../2020-ibd/inputs/gather_databases/nayfach-k31.sbt.json"
+    input: "../2020-ibd/inputs/gather_databases/nayfach-k31.tar.gz"
+    params: outdir="../2020-ibd/inputs/gather_databases"
     shell:'''
     tar xf {input} -C {params.outdir}
     '''
 
 rule download_gather_genbank:
-    output: "inputs/gather_databases/genbank-d2-k31.tar.gz"
+    output: "../2020-ibd/inputs/gather_databases/genbank-d2-k31.tar.gz"
     shell:'''
     wget -O {output} https://s3-us-west-2.amazonaws.com/sourmash-databases/2018-03-29/genbank-d2-k31.tar.gz
     '''
 
 rule untar_genbank:
-    output: "inputs/gather_databases/genbank-d2-k31.sbt.json"
-    input:  "inputs/gather_databases/genbank-d2-k31.tar.gz"
-    params: outdir = "inputs/gather_databases"
+    output: "../2020-ibd/inputs/gather_databases/genbank-d2-k31.sbt.json"
+    input:  "../2020-ibd/inputs/gather_databases/genbank-d2-k31.tar.gz"
+    params: outdir = "../2020-ibd/inputs/gather_databases"
     shell: '''
     tar xf {input} -C {params.outdir}
     '''
@@ -258,10 +256,10 @@ rule untar_genbank:
 rule gather_vita_vars:
     input:
         sig="outputs/vita_rf/vita_vars.sig",
-        db1="inputs/gather_databases/almeida-mags-k31.sbt.json",
-        db2="inputs/gather_databases/genbank-d2-k31.sbt.json",
-        db3="inputs/gather_databases/nayfach-k31.sbt.json",
-        db4="inputs/gather_databases/pasolli-mags-k31.sbt.json"
+        db1="../2020-ibd/inputs/gather_databases/almeida-mags-k31.sbt.json",
+        db2="../2020-ibd/inputs/gather_databases/genbank-d2-k31.sbt.json",
+        db3="../2020-ibd/inputs/gather_databases/nayfach-k31.sbt.json",
+        db4="../2020-ibd/inputs/gather_databases/pasolli-mags-k31.sbt.json"
     output: 
         csv="outputs/gather/vita_vars.csv",
         matches="outputs/gather/vita_vars.matches",
