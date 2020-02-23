@@ -72,11 +72,13 @@ prj %>% group_by(study_accession, diagnosis) %>% tally
 wrk <- select(prj, study_accession, run_accession, library_name, read_count, 
               sample_alias, diagnosis, subject, fecal_calprotectin)
 
-length(unique(wrk$library_name))
-length(unique(wrk$subject))
-
 wrk$subject <- ifelse(is.na(wrk$subject), wrk$library_name, wrk$subject)
 
+wrk <- wrk[order(wrk$library_name, decreasing = F), ]
+wrk <- wrk[!duplicated(wrk$subject), ]
+
+length(unique(wrk$library_name))
+length(unique(wrk$subject))
 
 # combine with hmp metadata -----------------------------------------------
 
@@ -88,9 +90,13 @@ hmp <- read_tsv("inputs/hmp2_mgx_metadata.tsv") %>%
   mutate(sample_alias = NA) %>%
   mutate(subject = Participant.ID) %>%
   mutate(fecal_calprotectin = fecalcal) %>%
+  arrange(subject, week_num) %>%
   select(study_accession, run_accession, library_name, read_count, sample_alias,
          diagnosis, subject, fecal_calprotectin) %>%
   filter(!is.na(fecal_calprotectin))
+
+# remove time series samples
+hmp <- hmp[!duplicated(hmp$subject), ]
 
 wrk <- rbind(wrk, hmp)
 
