@@ -62,9 +62,12 @@ ggplot(prj, aes(x = fecal_calprotectin, fill = study_accession)) +
   geom_density(alpha = .3) +
   theme_minimal()
 
-ggplot(prj, aes(x = fecal_calprotectin, fill = diagnosis)) +
-  geom_density(alpha = .3) +
-  theme_minimal()
+ggplot(prj, aes(x = fecal_calprotectin, fill = diagnosis, color = diagnosis)) +
+  geom_density(alpha = .5) +
+  theme_minimal() +
+  scale_fill_viridis_d() + 
+  scale_color_viridis_d() +
+  labs(x = "fecal calprotectin")
 
 table(prj$diagnosis)
 
@@ -102,6 +105,12 @@ wrk <- rbind(wrk, hmp)
 
 length(unique(wrk$subject))
 
+ggplot(wrk, aes(x = fecal_calprotectin, fill = diagnosis, color = diagnosis)) +
+  geom_density(alpha = .5) +
+  theme_minimal() +
+  scale_fill_viridis_d() + 
+  scale_color_viridis_d() +
+  labs(x = "fecal calprotectin")
 
 # set train, test, and valid ----------------------------------------------
 
@@ -144,5 +153,18 @@ for(i in 1:nrow(wrk)){
     wrk$set[i] <- "valid"
   }
 }
+
+
+# log transform fecal calprotectin ----------------------------------------
+
+wrk$fecal_calprotectin_log <- log(wrk$fecal_calprotectin)
+
+ggplot(wrk, aes(x = fecal_calprotectin_log, fill = diagnosis, color = diagnosis)) +
+  geom_density(alpha = .5) +
+  theme_minimal() +
+  scale_fill_viridis_d() + 
+  scale_color_viridis_d() +
+  labs(x = "log fecal calprotectin")
+
 
 write_tsv(x = wrk, path = "inputs/working_metadata_fecal_calprotectin.tsv")
