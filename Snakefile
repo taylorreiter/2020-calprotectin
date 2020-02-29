@@ -28,6 +28,7 @@ rule all:
         "outputs/vita_rf/pomona_install.txt",
         "outputs/gather/vita_vars.csv",
         "outputs/vita_rf/vita_vars.txt",
+        "outputs/filt_sig_hashes/count_total_hashes.txt"
 
 ########################################
 ## PREPROCESSING
@@ -269,3 +270,22 @@ rule gather_vita_vars:
     sourmash gather -o {output.csv} --save-matches {output.matches} --output-unassigned {output.un} --scaled 2000 -k 31 {input.sig} {input.db1} {input.db4} {input.db3} {input.db2}
     '''
 
+
+
+rule calc_total_hashes_sigs:
+    input: expand("outputs/sigs/{sample}.sig", sample = SAMPLES) 
+    output: "outputs/filt_sig_hashes/count_total_hashes.txt"
+    run:
+        files = input
+
+        all_mins = []
+        for file in files:
+            if os.path.getsize(file) > 0:
+                sigfp = open(file, 'rt')
+                siglist = list(signature.load_signatures(sigfp))
+                loaded_sig = siglist[1]
+                mins = loaded_sig.minhash.get_mins() # Get the minhashes 
+                all_mins += mins
+        
+        with open(str(output), "w") as f:
+            print(len(all_mins), file=f)
