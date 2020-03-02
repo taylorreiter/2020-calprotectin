@@ -48,7 +48,7 @@ fc_test <- fc[rownames(fc) %in% info_test$library_name, ]
 ## match order of to fc
 info_train <- info_train[match(rownames(fc_train), info_train$library_name), ]
 ## make diagnosis var
-calprotectin_train <- info_train$fecal_calprotectin
+calprotectin_train <- info_train$fecal_calprotectin_log
 
 # run vita ----------------------------------------------------------------
 
